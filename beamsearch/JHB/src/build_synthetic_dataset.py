@@ -15,7 +15,7 @@ project_root = current_script_dir.parent.parent.parent
 jhb_root_dir = current_script_dir.parent
 config_dir = jhb_root_dir / "configs"
 
-bg_images = [
+BG_PATHS = [
     str(config_dir / "empty_bg_1.png"),
     str(config_dir / "empty_bg_2.png"),
     str(config_dir / "empty_bg_3.png"),
@@ -259,7 +259,7 @@ def collect_annotations_from_yolo_txt():
             })
             total_parsed_objects += 1
 
-    print(f"🔍 [YOLO TXT 스캔 결과] 고유 알약 정답 {total_parsed_objects}개 확보 완료.")
+    print(f"[YOLO TXT 스캔 결과] 고유 알약 정답 {total_parsed_objects}개 확보 완료.")
     return merged
 
 
@@ -311,7 +311,7 @@ def build_pill_bank_with_sam(merged_annotations: dict, image_dir: str, bank_dir:
         [자산 구축] 전체 이미지에서 SAM으로 누끼를 전수 추출하여
         배경이 투명한 RGBA(PNG) 형태의 알약 자산 창고(Pill Bank)를 빌드
     """
-    print("[INFO] 🚀 최초 마스터 마스크 추출을 위한 MobileSAM 로딩 가동...")
+    print("[INFO] 최초 마스터 마스크 추출을 위한 MobileSAM 로딩 가동...")
     from ultralytics import SAM
     sam_model = SAM('mobile_sam.pt')
 
@@ -605,7 +605,7 @@ def build_balanced_synthetic_dataset(pill_bank_by_cat, bg_paths, out_image_dir, 
     # 제외 클래스(다수 클래스)를 제외한 소수 클래스 리스트업
     available_cats = [c for c in pill_bank_by_cat.keys() if not is_excluded_category(c) and pill_bank_by_cat[c]]
     if not available_cats:
-        print("⚠️ [경고] 합성에 사용할 수 있는 소수 클래스 자산이 없습니다.")
+        print("[경고] 합성에 사용할 수 있는 소수 클래스 자산이 없습니다.")
         return
 
     # 각 클래스당 목표 인스턴스(300개)만큼 균등하게 적재 후 셔플
@@ -691,7 +691,7 @@ def main():
 
     # 기존에 추출해 둔 자산 창고가 있다면 중복으로 SAM 연산을 하지 않음
     if os.path.exists(PILL_BANK_DIR) and len(os.listdir(PILL_BANK_DIR)) > 0:
-        print("\n⚡ [캐시 전수조사 스캔] 마스터 Pill Bank 내부의 모든 자산을 적재합니다.")
+        print("\n[캐시 전수조사 스캔] 마스터 Pill Bank 내부의 모든 자산을 적재합니다.")
         for f in os.listdir(PILL_BANK_DIR):
             if not f.lower().endswith('.png'):
                 continue
@@ -711,7 +711,7 @@ def main():
     # 만약 기존 캐시에 55번 초과 데이터가 발견되지 않았거나 비어있다면 새 빌드 가동
     cached_max_id = max([r["category_id"] for r in pill_bank]) if pill_bank else 0
     if not pill_bank or cached_max_id <= 55:
-        print("\n🔄 [캐시 무효화 및 갱신] 93개 클래스 전수 저장을 위해 마스터 마스크를 처음부터 다시 추출합니다.")
+        print("\n[캐시 무효화 및 갱신] 93개 클래스 전수 저장을 위해 마스터 마스크를 처음부터 다시 추출합니다.")
         if os.path.exists(PILL_BANK_DIR):
             shutil.rmtree(PILL_BANK_DIR)
         os.makedirs(SYN_IMAGE_DIR, exist_ok=True)
@@ -731,10 +731,8 @@ def main():
             continue
         pill_bank_by_cat[cid].append(rec)
 
-    print("\n📦 [Pill Bank 다중 자산 구축 리포트 - 전수조사 결과]")
-    print("=" * 75)
+    print("\n[Pill Bank 다중 자산 구축 리포트 - 전수조사 결과]")
     print(f"{'클래스 ID':<8} | {'알약 제품명':<35} | {'누끼 확보 수':<10} | {'상태'}")
-    print("-" * 75)
 
     for cid in range(93):
         count = len(pill_bank_all_debug[cid])
@@ -743,12 +741,11 @@ def main():
         if is_excluded_category(cid):
             status = "[제외 대상 (고정)]"
         elif count == 0:
-            status = "[⚠️ 데이터 공백]"
+            status = "[데이터 공백]"
         else:
             status = "[증강 대상]"
 
         print(f"ID {cid:<5} | {pill_name:<40} | {count:<12} | {status}")
-    print("=" * 75)
 
     print(f"[INFO] 최종 합성에 투입할 소수 카테고리 수: {len(pill_bank_by_cat)} (다수 클래스 배제 완료)")
 
