@@ -117,22 +117,18 @@ def main():
     # ======================================================================
     # 5. [추가] 최종 합성 데이터셋 품질 상태 통계 리포트 브리핑
     # ======================================================================
-    print("\n" + "=" * 50)
-    print("      📊 SYNTHETIC DATASET QA REPORT (v2)")
-    print("=" * 50)
-    print(f" 🔹 총 합성 성공 이미지 수 : {len(coco_data['images'])} 장")
-    print(f" 🔹 총 주입된 알약 객체 수 : {len(all_category_ids)} 개")
-    print(f" 🔹 장당 평균 알약 밀집도 : {len(all_category_ids) / max(1, len(coco_data['images'])):.2f} 개/장")
-    print("-" * 50)
-    print(" 📂 카테고리별 알약 데이터 분포 (Class Balance Check):")
+    print("\n SYNTHETIC DATASET QA REPORT (v2)")
+    print(f" 총 합성 성공 이미지 수 : {len(coco_data['images'])} 장")
+    print(f" 총 주입된 알약 객체 수 : {len(all_category_ids)} 개")
+    print(f" 장당 평균 알약 밀집도 : {len(all_category_ids) / max(1, len(coco_data['images'])):.2f} 개/장")
+    print(" 카테고리별 알약 데이터 분포 (Class Balance Check):")
 
     counter = Counter(all_category_ids)
     for cid in sorted(counter.keys()):
         cname = categories.get(cid, f"Unknown_ID_{cid}")
-        print(f"   - Class [{cid:02d}] {cname:<25} : {counter[cid]} 개 수집됨")
-    print("=" * 50)
-    print(f" 🎉 모든 시각화 검증본이 성공적으로 빌드되었습니다!")
-    print(f" 👉 검증 사진 폴더: {QA_OUT_DIR}\n")
+        print(f" - Class [{cid:02d}] {cname:<25} : {counter[cid]} 개 수집됨")
+    print(f" 모든 시각화 검증본이 성공적으로 빌드되었습니다!")
+    print(f" 검증 사진 폴더: {QA_OUT_DIR}\n")
 
 
 if __name__ == "__main__":
