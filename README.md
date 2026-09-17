@@ -1,138 +1,39 @@
-# 헬스잇(Health Eat) 경구약제 객체 검출 — 팀 모노레포
+# 다중 알약 객체 검출(Object Detection) 모델 개발 — 데이터 파이프라인 & 합성 데이터 엔지니어링
 
-> **코드잇 스프린트 AI 엔지니어링 12기 · 초급 프로젝트 · 3팀**
-> **ULTRA CAPSHYONG ITEM WITH 4 VALUES**
+> 팀 프로젝트(`헬스잇 Health Eat`) 중 본인이 직접 담당한 부분을 정리한 개인 기록입니다. 팀 전체 협업 구조·규칙 문서는 [docs/TEAM_COLLABORATION.md](docs/TEAM_COLLABORATION.md)를 참고하세요.
 
-사진 속 **최대 4개 알약의 클래스 + 바운딩 박스**를 검출하고, 검출 결과를 실제 약 정보로 변환하는 **웹 서비스**까지 만드는 프로젝트.
+## 프로젝트 개요
+사용자가 촬영한 단일 이미지 속 최대 4개 알약의 품목(클래스)과 위치(Bounding Box)를 동시에 검출하는 모델을 개발하는 팀 프로젝트였습니다. 저는 Data & ML Engineer로서 데이터 전처리·정제·합성 파이프라인 설계와 모델 학습·오차 분석을 담당했습니다.
 
-- **과제:** Object Detection (이미지당 0~4개, COCO 포맷) · **지표:** mAP@[0.75:0.95] (Kaggle)
-- **기간:** 2026-06-26 ~ 07-13 · 중간발표 07-07 · 최종발표 07-14
+## 담당 업무
 
----
-## 주요 보고서 및 협업일지 링크
-- [3팀 노션](https://app.notion.com/p/1_3-38bb13f77dbd80789762f37a573d2c1e?source=copy_link)
-  - [협업일지 위치](https://app.notion.com/p/38fb13f77dbd8027b2efc9482f2655cc?source=copy_link)
-    - [이태민](https://app.notion.com/p/38bb13f77dbd804481dad1a25eed36f1?source=copy_link)
-    - [이형기](https://app.notion.com/p/39cb13f77dbd80e693b9cd9856a5e851?source=copy_link)
-    - [장한빈](https://app.notion.com/p/39af4a2e0374804eb325ea5d6e5f0c0c?source=copy_link)
-    - [최중열](https://app.notion.com/p/38bc4fa9026180b6834be509b0d11dde?source=copy_link)
-    - [홍우석](https://app.notion.com/p/38b6e864c1d88094b83cd0abf96b786e?source=copy_link)
-- [3팀 보고서 파일](https://github.com/taemin050-sys/project1-3team/blob/main/team/report/report-3-team.pdf)
+### 1. 분산 라벨 통합 및 전처리 파이프라인
+- 이미지 1장당 알약이 최대 4개인데 라벨은 알약별 개별 JSON 파일로 흩어져 있던 구조적 문제를 발견, 촬영 조건(조명·각도 식별자)을 키로 묶어 [Class, cx, cy, w, h] 정규화 좌표의 단일 YOLO 라벨로 병합하는 모듈 구축
+- 원본 이미지 파일명과 메타데이터 식별자 간 불일치를 해결하는 인덱스 매핑(zipping) 알고리즘 구현
 
+### 2. 전수 검수 및 데이터 클렌징
+- OpenCV로 바운딩 박스를 이미지 위에 전수 시각화·검증하는 파이프라인 제작
+- 5,800여 장 중 라벨 누락·오류 데이터 약 350장을 선별·제거
+- 드랍 시 정렬이 밀리는 문제를 파일명 기반 고유 키 매핑으로 해결해 데이터 무결성 확보
 
-## ★ 레포 구조 (정본 — 구조도는 이 문서 1곳에만)
+### 3. SAM 기반 합성 데이터 파이프라인
+- Contour 기반 전경 분리, 생성 AI 배경 합성 등 초기 시도의 한계(음각 텍스트 손상, 학습 효율 저하)를 확인 후 SAM(Segment Anything Model) 기반 마스크 추출로 전환
+- 알약 700여 개를 1회 추론해 투명 PNG 자산(pill_bank)으로 캐싱, 재추론 없이 재사용하도록 파이프라인 분리
+- 광원 방향에 따른 선형 그라디언트 음영·이중 감쇄 그림자 등 물리 기반 광학 효과를 적용해 실촬영 환경과 유사한 합성 이미지 약 3,000장 생성
 
-<!-- > 다른 문서는 구조를 **다시 그리지 않고** 이 절을 링크로 참조한다(드리프트 방지). 코드 실제 위치·실행 명령의 정본은 아래 **[코드 위치 맵](#-코드-위치-맵)**. -->
+### 4. 클래스 불균형 분석 및 타겟 밸런싱
+- 합성 데이터만으로 학습 시 실제 알약 특징 대신 합성 경계면 노이즈를 학습하는 과적합 현상 발견
+- 다중 알약 동시 출현(co-occurrence) 특성상 무작위 샘플링이 불균형을 오히려 심화시키는 문제를 확인
+- 다수 클래스는 합성 대상에서 제외하고 희소 클래스 위주로만 마스크를 배치하는 final_balanced_dataset 빌더 구현
 
-```
-repo/
-├── README.md              # ★ 구조 SSOT + 팀 자산 허브 (이 문서)
-├── .gitignore  requirements.txt  pyproject.toml  Makefile
-│
-├── docs/                  # 팀 설계 문서 00~08 (루트 공유 — 개인 폴더에 복제 X)
-│   └── README.md
-│
-├── shared/                # 경기 규칙(얇게, 전원 공용) ★공정성 코어
-│   ├── env.py             #   디바이스 자동 감지·시드
-│   ├── guards/            #   banned.py — 금지 데이터 가드(조합/TL_2/TS_2) 정본
-│   ├── ssot/              #   build_drug_master · build_crosswalk (category 계약)
-│   ├── eval/              #   local_map.py — mAP@[0.75:0.95] 공통 심판
-│   └── submit/            #   make_submission.py — 제출 포맷 검증(IR-06)
-│
-├── beamsearch/            # 탐색 — 각자 세계 (충돌 제로, 작업용 노트북)
-│   ├── LTM/ LHK/ CJY/ JHB/ HWS/   # 개인 영역: 구조·도구·방식 자유
-│   └── README.md
-│
-└── team/                  # 마일스톤 승격 결과 (전원 심사 통과분만) + 공통 데이터
-    ├── notebooks/         #   ★승격된 서사 노트북(코드+출력+의사결정 md) = 제출물
-    ├── data/              #   raw(미커밋)/processed(SSOT json)
-    ├── src/               #   data · models · inference (승격 파이프라인)
-    ├── service/           #   웹 서비스(app.py, serving_bundle)
-    ├── configs/  experiments/  outputs/  report/
-```
+### 5. 모델 학습 및 오차 분석
+- YOLOv11s 학습 결과 mAP 0.990 달성, 밸런싱 합성 데이터 추가 후 mAP 0.985로 소폭 변동
+- 예측/정답 박스를 픽셀 단위로 대조해 분류는 100% 일치하며, 고IoU 구간(0.75~0.95)에서의 점수 변동이 모델 결함이 아닌 1~2픽셀 수준의 라벨링 경계 기준 차이임을 규명
 
-**3영역 원칙:** `shared`(처음부터 전원 공용 규칙) ↔ `beamsearch/<이니셜>`(개인 자유 탐색) ↔ `team`(승격물 + 공통 데이터). 공정성은 **같은 채점기·같은 금지 가드**를 `shared`로 공유해서 확보하고, 방식·구조·도구는 개인 영역에서 자유. 승격 워크플로우는 [docs/03 §2.4](./docs/03-execution-strategy.md).
+## 핵심 인사이트
+- Data-Centric AI: 모델 튜닝보다 라벨 정합성 확보(350장 정제, 구조 매핑 오류 해결)가 성능에 더 직접적인 영향을 미침을 확인
+- 합성 데이터의 올바른 활용: 무분별한 양적 확장이 아니라 물리적 사실성 확보 + 희소 클래스 타겟팅이 병행되어야 일반화 성능으로 이어짐
+- 지표 이면 분석력: 리더보드 점수 하락(0.990→0.985)에 매몰되지 않고 예측 결과를 직접 픽셀 단위로 역추적해 원인을 규명
 
-<!-- ---
-
-## 🗺 코드 위치 맵
-
-| 기능 | 모듈(실행) | 파일 |
-| --- | --- | --- |
-| 디바이스/시드 | `shared.env` | `shared/env.py` |
-| 금지 가드(정본) | `shared.guards.banned` | `shared/guards/banned.py` |
-| SSOT 생성 | `shared.ssot.build_drug_master` | `shared/ssot/build_drug_master.py` |
-| 크로스워크 | `shared.ssot.build_crosswalk` | `shared/ssot/build_crosswalk.py` |
-| 로컬 mAP | `shared.eval.local_map` | `shared/eval/local_map.py` |
-| 제출 CSV·검증 | `shared.submit.make_submission` | `shared/submit/make_submission.py` |
-| COCO→YOLO | `team.src.data.coco_to_yolo` | `team/src/data/coco_to_yolo.py` |
-| 구조적 증강(단일→멀티) | `team.src.data.augmentor` | `team/src/data/augmentor.py` |
-| 외부 단일 필터 | `team.src.data.filter_aihub` | `team/src/data/filter_aihub.py` |
-| 오토라벨링 E9 | `team.src.data.autolabel_*` | `team/src/data/autolabel_*.py` |
-| 학습 | `team.src.models.train` | `team/src/models/train.py` |
-| 추론 | `team.src.inference.predict` | `team/src/inference/predict.py` |
-| 웹 서비스 | — | `team/service/app.py` |
-
-> 설계 문서(docs/)의 `src/…` 표기는 **논리적 파이프라인 명칭**이며, 실제 위치·명령은 이 표가 정본. -->
-
----
-
-## 💻 개발·학습 환경 & 워크플로우
-
-- **학습(공식): Runpod** — PyTorch 2.8 + CUDA 12.8 프리빌트(JupyterLab). GPU는 모델 규모에 맞춰 팀 상의.
-- **로컬 개발:** VSCode + JupyterLab 등으로 학습 외 작업. Colab 유료 GPU 등 병용 가능.
-- **디바이스 이식성:** `shared.env`로 자동 감지(CUDA→MPS→CPU). 개인 머신 사양은 규정하지 않음.
-- **워크플로우:** 로컬에서 데이터·전처리·스모크까지 → push → **Runpod에서 GPU 학습** → 결과 push → Runpod 종료. (학습 외는 로컬, GPU 학습만 Runpod)
-
----
-<!-- 
-## ⚙️ 재현 절차 (개요)
-
-```bash
-pip install -r requirements.txt   # 또는  pip install -e .   (레포 루트에서 실행)
-
-make ssot        # shared.ssot.build_drug_master → team/data/processed/{class_map,drug_master}.json
-make prep        # team.src.data.coco_to_yolo → YOLO 학습 포맷 + data.yaml
-make train       # team.src.models.train (configs/e1_baseline.yaml, device 자동)
-make predict     # team.src.inference.predict → team/outputs/detections.json
-make submit      # shared.submit.make_submission → team/outputs/submission.csv (검증)
-make eval        # shared.eval.local_map (mAP@[0.75:0.95])
-```
-
-> 데이터 보강: `make crosswalk`·`make augment`·`make autolabel` (docs/07·08). 웹 데모: `make serve`. 실제 인자는 `Makefile` 참조.
-
---- -->
-
-## 📦 데이터 · 증강 · 오토라벨링
-
-- **대회 데이터** → `team/data/raw/`(미커밋). **SSOT**(class_map/drug_master) → `team/data/processed/`.
-- **외부 보강**: AI Hub 경구약제 **단일**(docs/07) · **구조적 Copy-Paste 증강**으로 단일→멀티 합성(`augmentor.py`).
-- **오토라벨링(E9)**: 식약처/약학정보원 낱알식별(docs/08). MFDS 낱알 API 다운로더는 **본 레포에 넣지 않고 별도 진행**, 결과물만 `team/data/raw/`로 반입.
-- ⛔ **금지 데이터셋**: `TL_2_조합.zip`/`TS_2_조합.zip` — `shared/guards/banned.py`가 코드 전반에서 자동 차단.
-
----
-
-## 🤝 협업 방식 (사람 중심)
-
-- **탐색:** 각자 `beamsearch/<이니셜>/`에서 자유롭게(구조·도구·방식). 공정성은 `shared` 채점기·가드로 보장.
-- **승격:** 마일스톤마다 전원이 결과·과정을 비교·심사 → 우수안만 `team/`으로 승격. (게이트: docs/03 §2.4)
-- **데일리 브리핑:** 매일 10:00~10:20. **Kaggle:** 팀 단위 제출, 1일 10회.
-- **원격·승격:** 팀장 **이태민** 주도, 전원 평가로 결정(자동 머지 아님).
-
-## ⚖️ 라이선스 · 금지
-
-- 원본: AI Hub 경구약제 이미지 데이터(코드잇 가공 제공). 활용 시 출처 명시.
-- AI Hub **조합 validation**은 오토라벨 **검증용으로만** 사용(주강사 확인, docs/07).
-- 복제 금지(타 팀 주제·코드·결론) · 커밋 금지(원본 데이터·가중치·시크릿·개인 도구 설정).
-
----
-
-## 👥 팀
-
-| 이름 | 이니셜 | 역할 |
-| --- | --- | --- |
-| 이태민 | LTM | Project Manager (팀장) |
-| 이형기 | LHK | Model Architect *(호칭 KAI · 과거 문서 JUSTIN 동일인)* |
-| 장한빈 | JHB | Experimentation Lead |
-| 최중열 | CJY | Experimentation Lead (→ 서빙/배포) |
-| 홍우석 | HWS | Data Engineer |
+## 팀 및 협업 구조
+이 프로젝트는 5인 팀(Project Manager, Model Architect, Experimentation Lead x2, Data Engineer)으로 진행되었습니다. 팀 전체의 저장소 구조, 협업 규칙, 역할 분담은 [docs/TEAM_COLLABORATION.md](docs/TEAM_COLLABORATION.md)에서 확인할 수 있습니다.
