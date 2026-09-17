@@ -1,9 +1,9 @@
 # 다중 알약 객체 검출(Object Detection) 모델 개발 — 데이터 파이프라인 & 합성 데이터 엔지니어링
 
-> 팀 프로젝트(`헬스잇 Health Eat`) 중 본인이 직접 담당한 부분을 정리한 개인 기록입니다. 팀 전체 협업 구조·규칙 문서는 [docs/TEAM_COLLABORATION.md](docs/TEAM_COLLABORATION.md)를 참고하세요.
+> 팀 프로젝트(`헬스잇 Health Eat`) 중 본인이 직접 담당한 부분을 정리한 개인 기록이다. 팀 전체 협업 구조·규칙 문서는 [docs/TEAM_COLLABORATION.md](docs/TEAM_COLLABORATION.md)에서 확인할 수 있다.
 
 ## 프로젝트 개요
-사용자가 촬영한 단일 이미지 속 최대 4개 알약의 품목(클래스)과 위치(Bounding Box)를 동시에 검출하는 모델을 개발하는 팀 프로젝트였습니다. 저는 Data & ML Engineer로서 데이터 전처리·정제·합성 파이프라인 설계와 모델 학습·오차 분석을 담당했습니다.
+사용자가 촬영한 단일 이미지 속 최대 4개 알약의 품목(클래스)과 위치(Bounding Box)를 동시에 검출하는 모델을 개발하는 팀 프로젝트였다. 저는 Data & ML Engineer로서 데이터 전처리·정제·합성 파이프라인 설계와 모델 학습·오차 분석을 담당했다.
 
 ## 담당 업무
 
@@ -36,4 +36,4 @@
 - 지표 이면 분석력: 리더보드 점수 하락(0.990→0.985)에 매몰되지 않고 예측 결과를 직접 픽셀 단위로 역추적해 원인을 규명
 
 ## 팀 및 협업 구조
-이 프로젝트는 5인 팀(Project Manager, Model Architect, Experimentation Lead x2, Data Engineer)으로 진행되었습니다. 팀 전체의 저장소 구조, 협업 규칙, 역할 분담은 [docs/TEAM_COLLABORATION.md](docs/TEAM_COLLABORATION.md)에서 확인할 수 있습니다.
+이 프로젝트는 5인 팀(Project Manager, Model Architect, Experimentation Lead x2, Data Engineer)으로 진행되었다. 팀 전체의 저장소 구조, 협업 규칙, 역할 분담은 [docs/TEAM_COLLABORATION.md](docs/TEAM_COLLABORATION.md)에서 확인할 수 있다.
