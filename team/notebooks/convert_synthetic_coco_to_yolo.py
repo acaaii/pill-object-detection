@@ -17,16 +17,16 @@ OUTPUT_DIR = str(SYN_DIR / "labels")
 def convert_synthetic_labels():
     # 1. 목적지 폴더 무결성 리셋 (오염 방지)
     if os.path.exists(OUTPUT_DIR):
-        print(f"🧹 기존 데이터 혼선을 막기 위해 폴더 초기화 중: {OUTPUT_DIR}")
+        print(f"기존 데이터 혼선을 막기 위해 폴더 초기화 중: {OUTPUT_DIR}")
         shutil.rmtree(OUTPUT_DIR)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # 2. JSON 파일 로드
     if not os.path.exists(JSON_PATH):
-        print(f"❌ 합성 정답 JSON 파일을 찾을 수 없습니다. 경로를 확인하세요: {JSON_PATH}")
+        print(f"합성 정답 JSON 파일을 찾을 수 없습니다. 경로를 확인하세요: {JSON_PATH}")
         return
 
-    print("⏳ 대용량 합성 정답 JSON 파일을 읽어오는 중입니다...")
+    print("대용량 합성 정답 JSON 파일을 읽어오는 중입니다...")
     with open(JSON_PATH, 'r', encoding='utf-8') as f:
         coco_data = json.load(f)
 
@@ -46,7 +46,7 @@ def convert_synthetic_labels():
         if img_id in annotations_by_image:
             annotations_by_image[img_id].append(annot)
 
-    print("🚀 YOLO 포맷 .txt 라벨 파일 변환 및 분할을 시작합니다...")
+    print("YOLO 포맷 .txt 라벨 파일 변환 및 분할을 시작합니다...")
     success_count = 0
     total_objects = 0
 
@@ -85,12 +85,10 @@ def convert_synthetic_labels():
                 txt_f.write("\n".join(yolo_lines))
             success_count += 1
 
-    print("\n" + "=" * 50)
-    print("🎉 [합성 데이터셋 라벨 변환 완료]")
-    print(f"📂 정상 저장된 .txt 라벨 파일 수 : {success_count}개")
-    print(f"📊 텍스트 파일에 기입된 총 알약 수: {total_objects}개")
-    print(f"💾 보관 경로: {OUTPUT_DIR}")
-    print("=" * 50)
+    print("\n[합성 데이터셋 라벨 변환 완료]")
+    print(f"정상 저장된 .txt 라벨 파일 수 : {success_count}개")
+    print(f"텍스트 파일에 기입된 총 알약 수: {total_objects}개")
+    print(f"보관 경로: {OUTPUT_DIR}")
 
 
 if __name__ == '__main__':
