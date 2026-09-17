@@ -110,14 +110,14 @@ CLASS_NAMES = {
 
 def count_class_instances():
     if not os.path.exists(label_dir):
-        print(f"❌ 경로를 찾을 수 없습니다: {label_dir}")
+        print(f"경로를 찾을 수 없습니다: {label_dir}")
         return
 
     class_counter = Counter()
     total_files = 0
     total_instances = 0
 
-    print("🔍 [YOLO 라벨 정밀 분석 프로세스 가동]...\n")
+    print("[YOLO 라벨 정밀 분석 프로세스 가동]...\n")
 
     # 모든 txt 파일 전수조사
     for filename in os.listdir(label_dir):
@@ -137,17 +137,14 @@ def count_class_instances():
                         class_counter[class_id] += 1
                         total_instances += 1
         except Exception as e:
-            print(f"🔺 파일 읽기 오류 ({filename}): {str(e)}")
+            print(f"파일 읽기 오류 ({filename}): {str(e)}")
 
     # ==================== 결과 출력 ====================
-    print("📊 [데이터셋 클래스 분포 결과]")
-    print("=" * 65)
-    print(f"📂 분석 대상 폴더 : {label_dir}")
-    print(f"📸 총 라벨 파일 수 : {total_files}장")
-    print(f"💊 총 발견된 알약  : {total_instances}개")
-    print("=" * 65)
+    print("[데이터셋 클래스 분포 결과]")
+    print(f"분석 대상 폴더 : {label_dir}")
+    print(f"총 라벨 파일 수 : {total_files}장")
+    print(f"총 발견된 알약  : {total_instances}개")
     print(f"{'클래스 ID':<8} | {'알약 제품명':<25} | {'개수':<6} | {'비율(%)'}")
-    print("-" * 65)
 
     # 0번부터 55번까지 순차적으로 정렬하여 출력 (데이터 상태 직관적 파악 가능)
     for i in range(93):
@@ -157,18 +154,17 @@ def count_class_instances():
 
         # 데이터가 아예 없는 빈 클래스는 눈에 띄게 표기
         if count == 0:
-            print(f"ID {i:<5} | {pill_name:<30} | {count:<6} | {percentage:.1f}% (⚠️ 데이터 없음)")
+            print(f"ID {i:<5} | {pill_name:<30} | {count:<6} | {percentage:.1f}% (데이터 없음)")
         else:
             print(f"ID {i:<5} | {pill_name:<30} | {count:<6} | {percentage:.1f}%")
 
-    print("=" * 65)
 
     # 불균형 상태 경고 시스템
     if class_counter:
         most_common_id, most_count = class_counter.most_common(1)[0]
         most_name = CLASS_NAMES.get(most_common_id, "Unknown")
         if (most_count / total_instances) > 0.5:
-            print(f"🚨 위험 경고: '{most_name}(ID {most_common_id})' 제품이 전체의 50%를 초과한 심각한 쏠림 상태입니다!")
+            print(f"위험 경고: '{most_name}(ID {most_common_id})' 제품이 전체의 50%를 초과한 심각한 쏠림 상태입니다!")
 
 
 if __name__ == '__main__':
