@@ -22,7 +22,7 @@ def train_phase1_freeze():
     목적: Pretrained 지식을 보존한 채, 고해상도(1280px) 입력에 맞춰
           새로운 데이터셋의 Head Layer 안정화한다
     """
-    print("\n 🚀 [Phase 1] 시작: Backbone Freeze 초기 학습")
+    print("\n [Phase 1] 시작: Backbone Freeze 초기 학습")
 
     # 디버그: 실행 시점에 실제로 읽히는 yaml 내용을 그대로 출력
     print("===== YAML_PATH 실제 내용 =====")
@@ -52,7 +52,7 @@ def train_phase1_freeze():
         workers=4,
         device=0
     )
-    print("✅ [Phase 1] 완료!")
+    print("[Phase 1] 완료!")
     return results
 
 
@@ -62,7 +62,7 @@ def train_phase2_finetune(phase1_results=None):
     목적: 전체 레이어의 잠금을 풀고 아주 미세한 학습률로
           정교하게 학습합니다.
     """
-    print("\n 🔥 [Phase 2] 시작: Full Unfreeze 미세 조정 (Fine-Tuning)")
+    print("\n [Phase 2] 시작: Full Unfreeze 미세 조정 (Fine-Tuning)")
 
     # 가장 최신 best.pt를 찾아옵니다.
     best_model_path = None
@@ -75,17 +75,17 @@ def train_phase2_finetune(phase1_results=None):
         search_path = os.path.join("pill_project", "stage1_freeze*")
         folders = glob.glob(search_path)
         if not folders:
-            print("❌ [ERROR] Phase 1 학습 폴더를 찾을 수 없습니다. Phase 1이 정상 완료되었는지 확인하세요.")
+            print("[ERROR] Phase 1 학습 폴더를 찾을 수 없습니다. Phase 1이 정상 완료되었는지 확인하세요.")
             return
 
         # 가장 최근에 수정된 폴더 찾기
         latest_folder = max(folders, key=os.path.getmtime)
         best_model_path = os.path.join(latest_folder, "weights", "best.pt")
 
-    print(f"📦 로딩할 Phase 1 최고 가중치 경로: {best_model_path}")
+    print(f"로딩할 Phase 1 최고 가중치 경로: {best_model_path}")
 
     if not os.path.exists(best_model_path):
-        print(f"❌ [ERROR] 해당 경로에 best.pt 파일이 존재하지 않습니다: {best_model_path}")
+        print(f"[ERROR] 해당 경로에 best.pt 파일이 존재하지 않습니다: {best_model_path}")
         return
 
     # 찾아낸 가중치로 모델 로드
@@ -108,7 +108,7 @@ def train_phase2_finetune(phase1_results=None):
         workers=4,
         device=0
     )
-    print("🎉 [Phase 2] 완료!")
+    print("[Phase 2] 완료!")
 
 
 if __name__ == '__main__':
